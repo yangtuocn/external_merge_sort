@@ -1,0 +1,60 @@
+# This is a python script for splitting and sorting a large data file.
+# Each time it reads 5 million (5000000) lines from the file or any
+# number of lines remaining, sorts them, and writes to a new file.
+
+# In this case, the data file is in csv format.
+# Each line consists of multiple integers.
+# The 4th and 5th integers are the sorting keys.
+
+from operator import itemgetter
+
+with open('mylargedata.csv','rt') as data_file:
+
+    batch_size = 5000000
+
+    batch_number = 1
+    count = 0
+    data_list = []
+    result = []
+    
+    for line in data_file:
+        
+        # read line by line into data_list
+        data_line = line.rstrip('\n').split(',')
+        data = [int(item) for item in data_line]
+        data_list.append(data)
+        count += 1
+        
+        # sort and save for every 5-million lines
+        if count == batch_size:
+        
+            # sort data_list using the 4th and 5th data as keys
+            result=sorted(data_list, key=itemgetter(4,5))
+            
+            # save the result in deposit_X.csv files, 
+            # where X stands for the batch number.
+            deposit_file_name = 'deposit_' + str(batch_number) + '.csv'
+            with open(deposit_file_name,'wt') as deposit_file:
+                for data in result:
+                    data_line = str(data).lstrip('[').rstrip(']')
+                    deposit_file.write(data_line)
+                    deposit_file.write('\n')
+            
+            # After saving, re-initializing the variables
+            batch_number += 1
+            count = 0
+            data_list = []
+            result = []
+    
+    # sort and save for the remaining lines
+    result=sorted(data_list, key=itemgetter(4,5))
+    
+    deposit_file_name = 'deposit_' + str(batch_number) + '.csv'
+    with open(deposit_file_name,'wt') as deposit_file:
+        for data in result:
+            data_line = str(data).lstrip('[').rstrip(']')
+            deposit_file.write(data_line)
+            deposit_file.write('\n')
+    
+    data_list = []
+    result = []
