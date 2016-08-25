@@ -1,0 +1,59 @@
+# This python script merges the deposit_X.csv files and save into a sorted file.
+# It reads one line from each deposit file into a buffer, compares them, and
+# pops and saves the smallest one into the sorted file. It then refills the
+# buffer by reading a new line from the corresponding deposit file. If one deposit
+# file is finished, it is closed and removed from the buffer.
+
+# There are 9 deposit_X.csv files, where X = 1..9.
+# Each line represents one data point, and consists of multiple integers.
+# The 4th and 5th integers are the sorting keys.
+
+buffer_number = 9
+buffer = []
+deposit_file = []
+
+sorted_file = open('sorted_mylargedata.csv','wt')
+
+# open the 9 deposit files and read the first data point into the buffer
+for i in range(buffer_number):
+    deposit_file_name = 'deposit_' + str(i+1) + '.csv'
+    deposit_file.append(open(deposit_file_name,'rt'))
+
+    data_line = deposit_file[i].readline().rstrip('\n').split(',')
+    data = [int(item) for item in data_line]
+    buffer.append(data)
+    
+while buffer:
+
+    # initializing p1. p1 points to the smallest data point.
+    p1 = 0
+    index1 = buffer[0][4]
+    index2 = buffer[0][5]
+    
+    # search for the smallest data point
+    for p2 in range(1,buffer_number):
+        if (buffer[p2][4] < index1 or
+            (buffer[p2][4] == index1 and buffer[p2][5] < index2)):
+            p1 = p2
+            index1 = buffer[p2][4]
+            index2 = buffer[p2][5]
+    
+    # remove p1 form the buffer and save
+    data = buffer.pop(p1)
+    data_line = str(data).lstrip('[').rstrip(']')
+    sorted_file.write(data_line)
+    sorted_file.write('\n')
+    
+    # refill the buffer from the corresponding deposit file
+    data_line = deposit_file[p1].readline()
+    if data_line:
+        data_str = data_line.rstrip('\n').split(',')
+        data = [int(item) for item in data_str]
+        buffer.insert(p1,data)
+    # If the deposit file is finished, close it and remove from the buffer.
+    else:
+        deposit_file[p1].close()
+        deposit_file.pop(p1)
+        buffer_number -= 1
+        
+sorted_file.close()
